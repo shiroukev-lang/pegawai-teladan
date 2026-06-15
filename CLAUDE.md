@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**GitHub:** https://github.com/shiroukev-lang/pegawai-teladan
+
 ## Running the App
 
 Two processes must run simultaneously:
