@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: tlhp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tlhpuser
+      POSTGRES_PASSWORD: tlhp123456
+      POSTGRES_DB: tlhp_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - tlhp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tlhpuser -d tlhp_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Node.js API Server
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: tlhp_api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://tlhpuser:tlhp123456@postgres:5432/tlhp_db
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tlhp_network
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  tlhp_network:
+    driver: bridge
